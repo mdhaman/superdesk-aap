@@ -14,6 +14,7 @@ import os
 import settings
 import logging
 import logging.config
+import newrelic
 
 from superdesk.factory import get_app as superdesk_app
 from superdesk.logging import configure_logging
