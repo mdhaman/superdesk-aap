@@ -163,7 +163,8 @@ class LegalArchiveConsistencyCheckCommand(superdesk.Command):
         diff = {}
         for k, v in archive_items.items():
             if not compare_dictionaries(v, legal_items.get(k)):
-                diff[k.replace('.', ':')] = {'archive': v, 'legal': legal_items.get(k)}
+                key = k.replace('.', ':') if isinstance(k, str) else str(k)
+                diff[key] = {'archive': v, 'legal': legal_items.get(k)}
 
         record['difference'] = diff
         record['identical'] = len(archive_items) - len(diff)
@@ -219,13 +220,24 @@ class LegalArchiveConsistencyCheckCommand(superdesk.Command):
         if not archive_ids:
             return {}
 
-        query = {
-            '$and': [{'_id': {'$in': archive_ids}}]
-        }
+        no_of_buckets = len(range(0, len(archive_ids), self.default_page_size))
+        items = {}
+        logger.info('fetching items from legal archive. '
+                    'Buckets : {}, page size: {}'.format(no_of_buckets, self.default_page_size))
 
-        return self._get_items('legal_archive', query, '_created',
-                               [config.VERSION, 'versioncreated', 'state'],
-                               self.__get_key)
+        for bucket in range(0, no_of_buckets):
+            start = bucket * self.default_page_size
+            end = (bucket + 1) * self.default_page_size
+            logger.info('fetching items from legal archive. start {} -- end {}'.format(start, end))
+            ids = archive_ids[start:end]
+            query = {
+                '$and': [{'_id': {'$in': ids}}]
+            }
+
+            items.update(self._get_items('legal_archive', query, '_created',
+                                         [config.VERSION, 'versioncreated', 'state'],
+                                         self.__get_key))
+        return items
 
     def _get_archive_version_items(self, archive_ids):
         """
@@ -236,13 +248,24 @@ class LegalArchiveConsistencyCheckCommand(superdesk.Command):
         if not archive_ids:
             return {}
 
-        query = {
-            '$and': [{'_id_document': {'$in': archive_ids}}]
-        }
+        no_of_buckets = len(range(0, len(archive_ids), self.default_page_size))
+        items = {}
+        logger.info('fetching items from archive versions. '
+                    'Buckets : {}, page size: {}'.format(no_of_buckets, self.default_page_size))
 
-        return self._get_items('archive_versions', query, '_created',
-                               [config.VERSION, 'versioncreated', 'state'],
-                               self.__get_version_key)
+        for bucket in range(0, no_of_buckets):
+            start = bucket * self.default_page_size
+            end = (bucket + 1) * self.default_page_size
+            logger.info('fetching items from archive version. start {} -- end {}'.format(start, end))
+            ids = archive_ids[start:end]
+            query = {
+                '$and': [{'_id_document': {'$in': ids}}]
+            }
+
+            items.update(self._get_items('archive_versions', query, '_created',
+                                         [config.VERSION, 'versioncreated', 'state'],
+                                         self.__get_version_key))
+        return items
 
     def _get_legal_archive_version_items(self, archive_ids):
         """
@@ -253,13 +276,25 @@ class LegalArchiveConsistencyCheckCommand(superdesk.Command):
         if not archive_ids:
             return {}
 
-        query = {
-            '$and': [{'_id_document': {'$in': archive_ids}}]
-        }
+        no_of_buckets = len(range(0, len(archive_ids), self.default_page_size))
+        items = {}
+        logger.info('fetching items from legal archive versions. '
+                    'Buckets : {}, page size: {}'.format(no_of_buckets, self.default_page_size))
 
-        return self._get_items('legal_archive_versions', query, '_created',
-                               [config.VERSION, 'versioncreated', 'state'],
-                               self.__get_version_key)
+        for bucket in range(0, no_of_buckets):
+            start = bucket * self.default_page_size
+            end = (bucket + 1) * self.default_page_size
+            logger.info('fetching items from legal archive versions. start {} -- end {}'.format(start, end))
+            ids = archive_ids[start:end]
+            query = {
+                '$and': [{'_id_document': {'$in': ids}}]
+            }
+
+            items.update(self._get_items('legal_archive_versions', query, '_created',
+                                         [config.VERSION, 'versioncreated', 'state'],
+                                         self.__get_version_key))
+
+        return items
 
     def _get_publish_queue_items(self, archive_ids):
         """
@@ -270,15 +305,26 @@ class LegalArchiveConsistencyCheckCommand(superdesk.Command):
         if not archive_ids:
             return {}
 
-        query = {
-            '$and': [{'item_id': {'$in': archive_ids}}]
-        }
+        no_of_buckets = len(range(0, len(archive_ids), self.default_page_size))
+        items = {}
+        logger.info('fetching items from publish queue items. '
+                    'Buckets : {}, page size: {}'.format(no_of_buckets, self.default_page_size))
 
-        return self._get_items('publish_queue', query, '_created',
-                               ['published_seq_num', 'publishing_action',
-                                'unique_name', 'item_version',
-                                'state', 'content_type'],
-                               self.__get_key)
+        for bucket in range(0, no_of_buckets):
+            start = bucket * self.default_page_size
+            end = (bucket + 1) * self.default_page_size
+            logger.info('fetching items from publish queue items. start {} -- end {}'.format(start, end))
+            ids = archive_ids[start:end]
+            query = {
+                '$and': [{'item_id': {'$in': ids}}]
+            }
+            items.update(self._get_items('publish_queue', query, '_created',
+                                         ['published_seq_num', 'publishing_action',
+                                          'unique_name', 'item_version',
+                                          'state', 'content_type'],
+                                         self.__get_key))
+
+        return items
 
     def _get_legal_publish_queue_items(self, archive_ids):
         """
@@ -289,15 +335,26 @@ class LegalArchiveConsistencyCheckCommand(superdesk.Command):
         if not archive_ids:
             return {}
 
-        query = {
-            '$and': [{'item_id': {'$in': archive_ids}}]
-        }
+        no_of_buckets = len(range(0, len(archive_ids), self.default_page_size))
+        items = {}
+        logger.info('fetching items from legal publish queue items. '
+                    'Buckets : {}, page size: {}'.format(no_of_buckets, self.default_page_size))
 
-        return self._get_items('legal_publish_queue', query, '_created',
-                               ['published_seq_num', 'publishing_action',
-                                'unique_name', 'item_version',
-                                'state', 'content_type'],
-                               self.__get_key)
+        for bucket in range(0, no_of_buckets):
+            start = bucket * self.default_page_size
+            end = (bucket + 1) * self.default_page_size
+            logger.info('fetching items from legal publish queue. start {} -- end {}'.format(start, end))
+            ids = archive_ids[start:end]
+            query = {
+                '$and': [{'item_id': {'$in': ids}}]
+            }
+
+            items.update(self._get_items('legal_publish_queue', query, '_created',
+                                         ['published_seq_num', 'publishing_action',
+                                          'unique_name', 'item_version',
+                                          'state', 'content_type'],
+                                         self.__get_key))
+        return items
 
     def _get_date_range(self, input_date, days_to_process=1):
         """
