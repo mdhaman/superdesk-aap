@@ -218,3 +218,6 @@ PUBLISHED_CONTENT_EXPIRY_MINUTES = int(env('PUBLISHED_CONTENT_EXPIRY_MINUTES', 3
 
 # Enable/Disable Content API Publishing
 CONTENTAPI_ENABLED = json.loads(env('CONTENTAPI_ENABLED', 'False').lower())
+
+
+NO_TAKES = True
