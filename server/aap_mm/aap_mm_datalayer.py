@@ -59,7 +59,7 @@ class AAPMMDatalayer(DataLayer):
         self._password = None
         self._http = urllib3.PoolManager()
 
-    def find(self, resource, req, lookup):
+    def find(self, resource, req, lookup, relogin=False):
         """
         Called to execute a search against the AAP Mulitmedia API. It attempts to translate the search request
         passed in req to a suitable form for a search request against the API. It parses the response into a
@@ -69,6 +69,9 @@ class AAPMMDatalayer(DataLayer):
         :param lookup:
         :return:
         """
+        if relogin:
+            self._headers = None
+
         if self._headers is None:
             self.__set_auth_cookie(self._app)
 
@@ -131,6 +134,15 @@ class AAPMMDatalayer(DataLayer):
 
         r = self._http.urlopen('POST', url + '?' + urllib.parse.urlencode(query),
                                body=json.dumps(fields), headers=self._headers)
+
+        if r.status != 200:
+            message = 'Failed to execute request against AAP Multimedia System. Response: {}'.format(
+                json.loads(r.data.decode('UTF-8')))
+            logger.error(message)
+            if r.status != 401 or relogin:
+                raise SuperdeskApiError.internalError(message=message)
+            return self.find(resource, req, lookup, relogin=True)
+
         hits = self._parse_hits(json.loads(r.data.decode('UTF-8')))
         return ElasticCursor(docs=hits['docs'], hits={'hits': hits, 'aggregations': self._parse_aggregations(hits)})
 
