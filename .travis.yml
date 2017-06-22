@@ -3,10 +3,6 @@ language: python
 sudo: required
 dist: trusty
 
-services:
-    - elasticsearch
-    - redis-server
-
 addons:
   apt:
     packages:
@@ -18,7 +14,7 @@ addons:
 
 matrix:
     include:
-        - env: ELASTIC=24
+        - env: ELASTIC2X
           python: "3.5"
           addons:
               apt:
@@ -29,7 +25,7 @@ matrix:
                       - elasticsearch
                       - mongodb-org-server
 
-        - env: ELASTIC=17
+        - env: ELASTIC17
           python: "3.4"
           addons:
               apt:
@@ -41,7 +37,7 @@ matrix:
                       - mongodb-org-server
 
 
-        - env: ELASTIC=17
+        - env: ELASTIC17
           python: "3.5"
           addons:
               apt:
@@ -53,15 +49,16 @@ matrix:
                       - mongodb-org-server
 
 
+services:
+    - elasticsearch
+    - redis-server
+
 cache:
   directories:
     - $HOME/.cache/pip
     - $HOME/.npm
 
 before_install:
-    - sudo apt-get purge elasticsearch -y
-    - if [[ "$ELASTIC" == "24" ]]; then sudo apt-get install elasticsearch=2.4.4 && sudo service elasticsearch start; fi
-    - if [[ "$ELASTIC" == "17" ]]; then sudo apt-get install elasticsearch=1.7.5 && sudo service elasticsearch start; fi
     - nvm install node
     - nvm use node
     - node --version
